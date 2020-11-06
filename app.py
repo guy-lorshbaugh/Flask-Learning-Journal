@@ -1,4 +1,4 @@
-import datetime
+import datetime, forms, models, re
 
 from flask import (Flask, url_for, render_template, redirect,
                 flash)
@@ -7,13 +7,10 @@ from flask_bcrypt import check_password_hash
 from flask_login import (LoginManager, login_user, logout_user,
                              login_required, current_user)
 
-import models
-import forms
-
-import logging
-logger = logging.getLogger('peewee')
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+# import logging
+# logger = logging.getLogger('peewee')
+# logger.addHandler(logging.StreamHandler())
+# logger.setLevel(logging.DEBUG)
 
 app = Flask(__name__)
 app.secret_key ="430po9tgjlkifdsc.p0ow40-23365fg4h,."
@@ -170,7 +167,7 @@ def create():
             remember=form.remember.data,
             user_id=current_user.id
         )
-        tags_list = form.tags.data.split(', ')
+        tags_list =  re.split('\,\s*', form.tags.data)
         entry = models.Entry.get(models.Entry.title == form.title.data)
         for item in tags_list:
             try:
@@ -205,14 +202,14 @@ def edit(id):
         entry.time_spent = form.time_spent.data
         entry.learned = form.learned.data
         entry.remember = form.remember.data
-        for item in form.tags.data.split(', '):
+        for item in re.split('\,\s*', form.tags.data):
             try:
                 models.Tags.create(tag=item)
             except:
                 pass
         entry.save()
         del_tags(id)
-        for tag in form.tags.data.split(', '):
+        for tag in re.split('\,\s*', form.tags.data):
             tag_data = models.Tags.get(models.Tags.tag == tag)
             models.EntryTags.create(
                 entry_id=entry.id,
